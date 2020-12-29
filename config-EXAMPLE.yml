@@ -1,0 +1,3 @@
+homeassistant:
+  url: http://homeassistant.local:8123
+  access_token: 'ABCDEF'
