@@ -30,8 +30,6 @@ import adafruit_si7021
 
 # Create library object using our Bus I2C port
 sensor = adafruit_si7021.SI7021(board.I2C())
-sensor.set_resolution(0)
-#print sensor.get_resolution()
 
 def celsius2fahrenheit(celsius):
    return (celsius * 1.8) + 32
