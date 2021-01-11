@@ -34,6 +34,8 @@ from barbudor_ina3221.full import *
 logger = logging.getLogger(__name__)
 
 
+MAX_CACHE_TIME_SECONDS = 10
+
 # Ref: http://theorangeduck.com/page/synchronized-python
 def synchronized_method(method):
     
@@ -59,6 +61,9 @@ class NasStats:
         self.tempHumSensor = None
         self.voltCurrentSensor = None
 
+        self.stats_cache = None
+        self.stats_cache_timestamp = 0
+
     def startup(self):
         logger.info('NasStats Startup...')
 
@@ -66,7 +71,7 @@ class NasStats:
         # The si7021 has a i2c address of 0x40
         # We try to init the sensor 6 times because sometimes we get the following error on init:
         #   adafruit_si7021.py", line 100: RuntimeError("bad USER1 register (%x!=%x)" % (value, _USER1_VAL))
-        for x in range(6):
+        for x in range(10):
             try:
                 self.tempHumSensor = adafruit_si7021.SI7021(board.I2C())
                 break
@@ -145,11 +150,16 @@ class NasStats:
         # its within the last 10 seconds.
 
         logger.info('in getStats ############')
+        now = time.time()
+
+        if self.stats_cache is not None and ((now - self.stats_cache_timestamp) < MAX_CACHE_TIME_SECONDS):
+            logger.info('in getStats ############ returning value from cache')
+            return self.stats_cache 
 
         if self.tempHumSensor is None:
             return {}
 
-        now = time.time()
+       
         beginTime = now
         tempCelsius = self.tempHumSensor.temperature
         humidity = round(self.tempHumSensor.relative_humidity,1)
@@ -205,6 +215,10 @@ class NasStats:
             'drive2_bus_voltage': drive2_bus_voltage,
 
         }
+
+        self.stats_cache = stats
+        self.stats_cache_timestamp = now
+
         return stats
 
 
