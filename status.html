@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script type='text/javascript' src='https://code.jquery.com/jquery-1.9.1.js'></script>
+    <script type='text/javascript'>//<![CDATA[ 
+
+
+        var userLightStatesData = {};
+        var basaltData = {};
+
+
+        $(document).ready(function () {
+            
+            autoRefresh();
+        });
+
+        $(window).load(function () {
+            // Do nothing
+        });
+
+        /*
+        window.addEventListener("click", function (event) {
+            updateData();
+        });
+        */
+
+
+        function autoRefresh() {
+            getLatestData(true);
+            setTimeout(autoRefresh, 10000);
+        }
+
+        function getLatestData(async) {
+            var dataUrl = "/v1/data";
+            // Enable locally development of html
+            if (window.location.protocol == "file:") {
+                dataUrl = "http://rpitest2.local" + dataUrl;
+            }
+
+            communicationStatus("Loading...")
+            $.ajax({
+                url: dataUrl,
+                async: async,
+                timeout: 15000
+            })
+                .done(function (data) {
+                    communicationStatus("Done")
+                    basaltData = data;
+                    updateData();
+                })
+                .fail(function (jqxhr, textStatus, errorThrown) {
+                    communicationStatus("Failed:"+textStatus)
+                    console.log("AJAX call HTTP status: " + jqxhr.status + " Error: [" + textStatus + "] : [" + errorThrown + "]");
+                    basaltData = { };
+                    updateData();
+                });
+
+        }
+
+        function communicationStatus(msg) {
+            var element = document.getElementById("communicationStatus");
+            if (element != null) {
+                element.innerText = msg;
+            }
+        }
+
+        function updateData() {
+
+            for (var elementId in basaltData) {
+                var element = document.getElementById(elementId);
+                if (element != null) {
+                    element.innerText = basaltData[elementId];
+                }
+            }
+            var element = null
+
+            nasStats = basaltData['nasStats']
+            if (nasStats != null) {
+                updateField('timestamp', 'timestamp')
+                updateField('collectStatsDuration', 'collectStatsDuration')
+
+                updateField('temperature', 'temperature')
+                updateField('humidity', 'humidity')
+                updateField('rpi_psu_voltage', 'rpi_psu_voltage')
+                updateField('rpi_current', 'rpi_current')
+                updateField('rpi_bus_voltage', 'rpi_bus_voltage')
+                updateField('drive1_current', 'drive1_current')
+                updateField('drive1_bus_voltage', 'drive1_bus_voltage')
+                updateField('drive2_current', 'drive2_current')
+                updateField('drive2_bus_voltage', 'drive2_bus_voltage')
+            }
+
+        }
+
+
+        function updateField(elementName, jsonFieldName) {
+            element = document.getElementById(elementName);
+            if (element == null) {
+                console.warn("Unable to locate element by id "+elementName)
+                return
+            }
+            rpiInfo = basaltData['nasStats']
+            if (rpiInfo != null) {
+                element.innerText = basaltData['nasStats'][jsonFieldName]
+            }
+        }
+
+
+    //]]>
+    </script>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border: 0;
+            display: block;
+            font-size: 2vw;
+        }
+
+        th {
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            background-color: #ccc;
+        }
+
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .center {
+            position: relative;
+        }
+
+        #container {
+            padding-top: 30px;
+        }
+    </style>
+
+</head>
+
+
+
+<body>
+
+    <div id="container">
+        <span>
+            Communication: <span id="communicationStatus">Init</span>
+        </span>
+        <table>
+            <tr><th colspan="2">NAS Stats</th></tr>
+            <tr><td>Temperature:</td><td><span id="temperature"></span>&deg;</td></tr>
+            <tr><td>Humidity:</td><td><span id="humidity"></span></td></tr>
+            <tr><td>Supply Voltage:</td><td><span id="rpi_psu_voltage"></span></td></tr>
+            <tr><td>RPi:</td></tr>
+            <tr><td>&nbsp;&nbsp;Current(A):</td><td><span id="rpi_current"></span></td></tr>
+            <tr><td>&nbsp;&nbsp;Voltage:</td><td><span id="rpi_bus_voltage"></span></td></tr>
+            <tr><td>Drive 1:</td></tr>
+            <tr><td>&nbsp;&nbsp;Current(A):</td><td><span id="drive1_current"></span></td></tr>
+            <tr><td>&nbsp;&nbsp;Voltage:</td><td><span id="drive1_bus_voltage"></span></td></tr>
+            <tr><td>Drive 2:</td></tr>
+            <tr><td>&nbsp;&nbsp;Current(A):</td><td><span id="drive2_current"></span></td></tr>
+            <tr><td>&nbsp;&nbsp;Voltage:</td><td><span id="drive2_bus_voltage"></span></td></tr>
+
+            <tr><td>Data Timestamp:</td><td><span id="timestamp"></span></td></tr>
+            <tr><td>collectStatsDuration:</td><td><span id="collectStatsDuration"></span>&nbsp;Seconds</td></tr>
+
+            <tr>
+                <th colspan="2">Details</th>
+            </tr>
+                
+            <tr>
+                <td>CPU:</td>
+                <td><span id="cpuPercent"></span>%</td>
+            </tr>
+            <tr>
+                <td>RPi Time:</td>
+                <td><span id="rpiTime"></span></td>
+            </tr>
+            <tr>
+                <td>OS Uptime:</td>
+                <td><span id="osUptimeFmt"></span></td>
+            </tr>
+            <tr>
+                <td>App Uptime:</td>
+                <td><span id="appUptimeFmt"></span></td>
+            </tr>
+
+
+        </table>
+    </div>
+
+</body>
+
+</html>
+

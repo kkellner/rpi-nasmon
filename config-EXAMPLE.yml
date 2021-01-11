@@ -1,3 +1,13 @@
+mqtt:
+  host: MQTT_SERVER
+  port: 1883
+  username: USERNAME
+  password: PASSWORD
+  queue:
+    queueNamespace: yukon
+    locationName: room1 
+    typeName: nas
+    deviceName: bnas01
 homeassistant:
   url: http://homeassistant.local:8123
   access_token: 'ABCDEF'
