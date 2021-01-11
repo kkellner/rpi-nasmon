@@ -26,6 +26,8 @@ import time
 import datetime
 import threading
 import sys
+import subprocess
+import json
 
 import board
 import adafruit_si7021
@@ -190,6 +192,9 @@ class NasStats:
         drive2_current = round(self.voltCurrentSensor.current(channel),3)
         drive2_psu_voltage = round(drive2_bus_voltage + drive2_shunt_voltage,2)
 
+        filesystemInfo = self.runFilesystemInfoScript()
+
+
         endTime = time.time()
         collectStatsDuration = endTime-beginTime
 
@@ -214,6 +219,8 @@ class NasStats:
             'drive2_current': drive2_current,
             'drive2_bus_voltage': drive2_bus_voltage,
 
+            'filesystem': filesystemInfo
+
         }
 
         self.stats_cache = stats
@@ -226,3 +233,18 @@ class NasStats:
         return (celsius * 1.8) + 32
 
 
+
+    def runFilesystemInfoScript(self):
+
+        cmd = "./filesystem_info.sh"
+        p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+        
+        if p.returncode != 0:
+            logger.error("runFilesystemInfoScript returncode: %d", p.returncode)
+        
+
+        cmdOutput = p.stdout.strip()
+
+        jsonResult = json.loads(cmdOutput)
+
+        return jsonResult
