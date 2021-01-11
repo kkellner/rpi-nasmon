@@ -28,7 +28,7 @@ class HttpServer():
     SOCKET_TIMEOUT = 60
     THREAD_POOL_SIZE = 10
 
-    def __init__(self, _nas):
+    def __init__(self, _nasMon):
 
         endpointsGET = { 
             "/": "status",
@@ -45,7 +45,7 @@ class HttpServer():
 
         socketserver.TCPServer.allow_reuse_address = True
 
-        handler = partial(GetRequestHandler, _nas, endpointsGET, endpointsPOST)
+        handler = partial(GetRequestHandler, _nasMon, endpointsGET, endpointsPOST)
 
         #self.httpd = socketserver.TCPServer(('0.0.0.0', PORT), handler)
         self.httpd = ThreadedHTTPServer(('0.0.0.0', HttpServer.PORT), handler)

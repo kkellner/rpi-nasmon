@@ -1,0 +1,26 @@
+#
+# sudo cp nasmon.service /etc/systemd/system
+# sudo systemctl daemon-reload
+# sudo systemctl enable nasmon.service
+# sudo systemctl start nasmon.service
+#
+
+[Unit]
+Description=RPi NAS monitor push stats to MQTT
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u /home/kkellner/rpi-nasmon/nasmon.py
+WorkingDirectory=/home/kkellner/rpi-nasmon
+#StandardOutput=inherit
+#StandardError=inherit
+# The following "file:" option requires systemd version 236 or newer 
+# 2019-04-08-raspbian-stretch-lite has version 232
+# To show version run: systemctl --version
+StandardOutput=append:/var/log/nasmon.log
+StandardError=append:/var/log/nasmon.log
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

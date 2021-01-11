@@ -33,10 +33,27 @@ from barbudor_ina3221.full import *
 
 logger = logging.getLogger(__name__)
 
+
+# Ref: http://theorangeduck.com/page/synchronized-python
+def synchronized_method(method):
+    
+    outer_lock = threading.Lock()
+    lock_name = "__"+method.__name__+"_lock"+"__"
+    
+    def sync_method(self, *args, **kws):
+        with outer_lock:
+            if not hasattr(self, lock_name): setattr(self, lock_name, threading.Lock())
+            lock = getattr(self, lock_name)
+            with lock:
+                return method(self, *args, **kws)  
+
+    return sync_method
+
+
 class NasStats:
 
-    def __init__(self, nas):
-        self.nas = nas
+    def __init__(self, _nasMon):
+        self.nasMon = _nasMon
         self.stats_thread = None
         self.stats_thread_stop = threading.Event()
         self.tempHumSensor = None
@@ -53,8 +70,9 @@ class NasStats:
             try:
                 self.tempHumSensor = adafruit_si7021.SI7021(board.I2C())
                 break
-            except:
-                logger.error("Try {} Unexpected error: {}".format(x, sys.exc_info()[0]))
+            except RuntimeError as e:
+                #e = sys.exc_info()
+                logger.error("Try %d Unexpected error type: %s Msg: %s", x, type(e), e)
                 time.sleep(1)
             
 
@@ -111,14 +129,22 @@ class NasStats:
             logger.info('stats thread get-stats')
 
             data = self.getStats()
-            self.nas.pubsub.publishCurrentState(data)
+            self.nasMon.pubsub.publishCurrentState(data)
 
             self.stats_thread_stop.wait(30)
             #time.sleep(5)
         logger.info('stats thread EXITING')
 
 
+
+    # Only one thread can call at a time
+    @synchronized_method
     def getStats(self):
+
+        # TODO: Optimize by caching the result and return the cache value if
+        # its within the last 10 seconds.
+
+        logger.info('in getStats ############')
 
         if self.tempHumSensor is None:
             return {}
@@ -184,3 +210,5 @@ class NasStats:
 
     def celsius2fahrenheit(self, celsius):
         return (celsius * 1.8) + 32
+
+

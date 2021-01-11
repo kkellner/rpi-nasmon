@@ -7,14 +7,16 @@
 # 
 
 
-#import RPi.GPIO as GPIO
 import time
-#import board
 import logging, logging.handlers 
 import signal
 import sys
 import os
 import threading
+
+#import RPi.GPIO as GPIO
+#import board
+
 
 from pubsub import Pubsub
 from nas_stats import NasStats
@@ -24,7 +26,7 @@ from http_request import HttpServer
 logger = logging.getLogger(__name__)
 
 
-class Nas:
+class NasMon:
     """Handle NAS stats publish via MQTT"""
 
     def __init__(self):
@@ -95,8 +97,8 @@ def main():
     # noise = int(data[187:192])
     # print("Link:{} Level:{} Noise:{}".format(link, level, noise))
 
-    nas = Nas()
-    nas.startup()
+    nasMon = NasMon()
+    nasMon.startup()
 
 
 if __name__ == '__main__':

@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 class Pubsub:
 
  
-    def __init__(self, basalt):
-        self.basalt = basalt
+    def __init__(self, _nasMon):
+        self.nasMon = _nasMon
 
         ymlfile = open("config.yml", 'r')
         cfg = yaml.safe_load(ymlfile)
@@ -50,7 +50,10 @@ class Pubsub:
 
 
         # Node name example: yukon/node/rpibasalt1/status
-        self.nodeName = os.uname().nodename
+        _nodeName = os.uname().nodename
+        # Remove the domain part of the hostname if it exits
+        self.nodeName = _nodeName.partition('.')[0]
+
         self.queueNodeStatus = self.queueNamespace + "/node/" + self.nodeName + "/status"
 
         # Device name example: yukon/device/basalt/driveway/basalt1/light/status
@@ -68,7 +71,8 @@ class Pubsub:
 
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
-        deathPayload = "DISCONNECTED"
+        #deathPayload = "DISCONNECTED"
+        deathPayload = "offline"  # Has to be 'offline' (to match node death) so Home Assistant will work
         self.client.will_set(self.queueNodeStatus, deathPayload, 0, True)
 
         #self.client.message_callback_add(self.queueDeviceAllStatus, self.on_message_light_status)
@@ -106,7 +110,10 @@ class Pubsub:
     # Publish the NODE offline
     ######################################################################
     def publishNodeOffline(self):
-        logger.info("Publishing Node Birth")
+        # logger.info("Publishing Device Death")
+        # payload = "unknown"
+        # self.client.publish(self.queueDeviceStatus, payload, 0, True)
+        logger.info("Publishing Node Death")
         payload = "offline"
         self.client.publish(self.queueNodeStatus, payload, 0, True)
         
