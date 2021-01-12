@@ -10,7 +10,7 @@ df -Ph --block-size=1 | \
       split("\n") |
       .[] |
       if test("^/") then
-        gsub(" +"; " ") | split(" ") | {dev: .[0], mount: .[5], spacetotal: .[1], spaceused: .[2], spaceavail: .[3], spaceusedpercent: .[4]}
+        gsub(" +"; " ") | split(" ") | {dev: .[0], mount: .[5], spacetotal: .[1], spaceused: .[2], spaceavail: .[3]}
       else
         empty
       end

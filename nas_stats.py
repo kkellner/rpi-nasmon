@@ -228,7 +228,6 @@ class NasStats:
         return (celsius * 1.8) + 32
 
 
-
     def runFilesystemInfoScript(self):
 
         cmd = "./filesystem_info.sh"
@@ -239,4 +238,13 @@ class NasStats:
         
         cmdOutput = p.stdout.strip()
         jsonResult = json.loads(cmdOutput)
+
+        # Convert numbers from string to int JSON value and calculate spaceusedpercent to get multiple decimal places of accuracy  
+        for filesystem in jsonResult:
+            filesystem['spacetotal'] = int(filesystem['spacetotal'])
+            filesystem['spaceused'] = int(filesystem['spaceused'])
+            filesystem['spaceavail'] = int(filesystem['spaceavail'])
+            filesystem['spaceusedpercent'] = (filesystem['spaceused'] / filesystem['spacetotal']) * 100
+
         return jsonResult
+
