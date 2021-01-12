@@ -71,16 +71,16 @@ class NasStats:
 
         i2c_bus = board.I2C()
         # The si7021 has a i2c address of 0x40
-        # We try to init the sensor 6 times because sometimes we get the following error on init:
+        # We try to init the sensor multiple times because sometimes we get the following error on init:
         #   adafruit_si7021.py", line 100: RuntimeError("bad USER1 register (%x!=%x)" % (value, _USER1_VAL))
-        for x in range(10):
+        for x in range(30):
             try:
                 self.tempHumSensor = adafruit_si7021.SI7021(board.I2C())
                 break
             except RuntimeError as e:
                 #e = sys.exc_info()
                 logger.error("Try %d Unexpected error type: %s Msg: %s", x, type(e), e)
-                time.sleep(1)
+                time.sleep(2)
             
 
         # The INA3221 has a i2c address of 0x41 (changed from default)
@@ -163,8 +163,8 @@ class NasStats:
 
        
         beginTime = now
-        tempCelsius = self.tempHumSensor.temperature
-        humidity = round(self.tempHumSensor.relative_humidity,1)
+        enclosure_tempCelsius = self.tempHumSensor.temperature
+        enclosure_humidity = round(self.tempHumSensor.relative_humidity,1)
 
         #print('Temperature: %0.1f C (%0.1f F)  humidity: %0.1f %%' % (tempCelsius, celsius2fahrenheit(tempCelsius), humidity))
         while not self.voltCurrentSensor.is_ready:
@@ -204,8 +204,8 @@ class NasStats:
             'timestampEpoc': now,
             'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             'collectStatsDuration': round(collectStatsDuration, 3),
-            'temperature': round(self.celsius2fahrenheit(tempCelsius), 1),
-            'humidity': humidity,
+            'enclosure_temperature': round(self.celsius2fahrenheit(enclosure_tempCelsius), 1),
+            'enclosure_humidity': enclosure_humidity,
 
             'rpi_psu_voltage':rpi_psu_voltage,
             'rpi_current': rpi_current,
