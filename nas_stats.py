@@ -113,7 +113,7 @@ class NasStats:
 
         if self.stats_thread is None:
             logger.info('stats thread start request')
-            self.stats_thread = threading.Thread(target=self.statsThread)
+            self.stats_thread = threading.Thread(target=self.statsThread, name='statsUpdate')
             self.stats_thread.daemon = True
             self.stats_thread_stop.clear()
             self.stats_thread.start()
@@ -133,8 +133,6 @@ class NasStats:
         while not self.stats_thread_stop.isSet():
             #now = time.time() * 1000
           
-            logger.info('stats thread get-stats')
-
             data = self.getStats()
             self.nasMon.pubsub.publishCurrentState(data)
 
@@ -148,14 +146,11 @@ class NasStats:
     @synchronized_method
     def getStats(self):
 
-        # TODO: Optimize by caching the result and return the cache value if
-        # its within the last 10 seconds.
-
-        logger.info('in getStats ############')
+        logger.info('in getStats')
         now = time.time()
 
         if self.stats_cache is not None and ((now - self.stats_cache_timestamp) < MAX_CACHE_TIME_SECONDS):
-            logger.info('in getStats ############ returning value from cache')
+            logger.debug('in getStats returning value from cache')
             return self.stats_cache 
 
         if self.tempHumSensor is None:
@@ -242,9 +237,6 @@ class NasStats:
         if p.returncode != 0:
             logger.error("runFilesystemInfoScript returncode: %d", p.returncode)
         
-
         cmdOutput = p.stdout.strip()
-
         jsonResult = json.loads(cmdOutput)
-
         return jsonResult
