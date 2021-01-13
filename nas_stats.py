@@ -29,6 +29,9 @@ import sys
 import subprocess
 import json
 
+import psutil
+import os
+
 import board
 import adafruit_si7021
 from barbudor_ina3221.full import *
@@ -158,6 +161,22 @@ class NasStats:
 
        
         beginTime = now
+
+        cpuPercent = psutil.cpu_percent()
+        cpuFreq = psutil.cpu_freq().current
+        cpuTemperature = self.celsius2fahrenheit(psutil.sensors_temperatures()['cpu_thermal'][0].current)
+        memoryUsedPercent = psutil.virtual_memory().percent
+
+        osStartTime = psutil.boot_time()
+        osUptime = now - osStartTime
+
+        p = psutil.Process(os.getpid())
+        appStartTime = p.create_time()
+        appUptime = now - appStartTime
+
+
+
+
         enclosure_tempCelsius = self.tempHumSensor.temperature
         enclosure_humidity = round(self.tempHumSensor.relative_humidity,1)
 
@@ -189,7 +208,6 @@ class NasStats:
 
         filesystemInfo = self.runFilesystemInfoScript()
 
-
         endTime = time.time()
         collectStatsDuration = endTime-beginTime
 
@@ -199,20 +217,36 @@ class NasStats:
             'timestampEpoc': now,
             'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             'collectStatsDuration': round(collectStatsDuration, 3),
-            'enclosure_temperature': round(self.celsius2fahrenheit(enclosure_tempCelsius), 1),
-            'enclosure_humidity': enclosure_humidity,
 
-            'rpi_psu_voltage':rpi_psu_voltage,
-            'rpi_current': rpi_current,
-            'rpi_bus_voltage': rpi_bus_voltage,
+            'os': {
+                "cpuPercent": cpuPercent,
+                "cpuFreq": cpuFreq,
+                "cpuTemperature": cpuTemperature,
+                "memoryUsedPercent": memoryUsedPercent,
+                "osUptime": osUptime,
+                "osUptimeFmt": str(datetime.timedelta(seconds=round(osUptime))),
+                "appUptime": appUptime,
+                "appUptimeFmt": str(datetime.timedelta(seconds=round(appUptime))),
+            },
 
-            'drive1_psu_voltage':drive1_psu_voltage,
-            'drive1_current': drive1_current,
-            'drive1_bus_voltage': drive1_bus_voltage,
+            'enclosure': {
+                'temperature': round(self.celsius2fahrenheit(enclosure_tempCelsius), 1),
+                'humidity': enclosure_humidity,
+            },
 
-            'drive2_psu_voltage':drive2_psu_voltage,
-            'drive2_current': drive2_current,
-            'drive2_bus_voltage': drive2_bus_voltage,
+            'power': {
+                'rpi_psu_voltage':rpi_psu_voltage,
+                'rpi_current': rpi_current,
+                'rpi_bus_voltage': rpi_bus_voltage,
+
+                'drive1_psu_voltage':drive1_psu_voltage,
+                'drive1_current': drive1_current,
+                'drive1_bus_voltage': drive1_bus_voltage,
+
+                'drive2_psu_voltage':drive2_psu_voltage,
+                'drive2_current': drive2_current,
+                'drive2_bus_voltage': drive2_bus_voltage,
+            },
 
             'filesystem': filesystemInfo
 

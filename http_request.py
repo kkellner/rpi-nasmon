@@ -189,26 +189,7 @@ class GetRequestHandler(http.server.SimpleHTTPRequestHandler):
     def get_v1_data(self):
         
         nasStats = self.basalt.nasStats
-
-        # TODO: move this to rpi_info class
-        # Time format: https://www.saltycrane.com/blog/2008/06/how-to-get-current-date-and-time-in/
-        # https://stackoverflow.com/questions/538666/format-timedelta-to-string
-        osStartTime = psutil.boot_time()
-        osUptime = time.time() - osStartTime
-
-        p = psutil.Process(os.getpid())
-        appStartTime = p.create_time()
-        appUptime = time.time() - appStartTime
-
-        response = {
-                "nasStats" : nasStats.getStats(),
-                "cpuPercent": psutil.cpu_percent(),
-                "rpiTime": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
-                "osUptime": osUptime,
-                "osUptimeFmt": str(datetime.timedelta(seconds=round(osUptime))),
-                "appUptime": appUptime,
-                "appUptimeFmt": str(datetime.timedelta(seconds=round(appUptime)))
-            }
+        response = nasStats.getStats()
         self.__send_json_response(response)
         return
 

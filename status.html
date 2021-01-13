@@ -77,35 +77,40 @@
             }
             var element = null
 
-            nasStats = basaltData['nasStats']
+            nasStats = basaltData
             if (nasStats != null) {
-                updateField('timestamp', 'timestamp')
-                updateField('collectStatsDuration', 'collectStatsDuration')
+                updateField('timestamp', nasStats['timestamp'])
+                updateField('collectStatsDuration', nasStats['collectStatsDuration'])
 
-                updateField('enclosure_temperature', 'enclosure_temperature')
-                updateField('enclosure_humidity', 'enclosure_humidity')
-                updateField('rpi_psu_voltage', 'rpi_psu_voltage')
-                updateField('rpi_current', 'rpi_current')
-                updateField('rpi_bus_voltage', 'rpi_bus_voltage')
-                updateField('drive1_current', 'drive1_current')
-                updateField('drive1_bus_voltage', 'drive1_bus_voltage')
-                updateField('drive2_current', 'drive2_current')
-                updateField('drive2_bus_voltage', 'drive2_bus_voltage')
+                updateField('cpuPercent', nasStats['os']['cpuPercent'])
+                updateField('cpuFreq', nasStats['os']['cpuFreq'])
+                updateField('cpuTemperature', nasStats['os']['cpuTemperature'])
+                updateField('osUptimeFmt', nasStats['os']['osUptimeFmt'])
+                updateField('appUptimeFmt', nasStats['os']['appUptimeFmt'])
+
+
+                updateField('enclosure_temperature', nasStats['enclosure']['temperature'])
+                updateField('enclosure_humidity', nasStats['enclosure']['humidity'])
+                updateField('rpi_psu_voltage', nasStats['power']['rpi_psu_voltage'])
+                updateField('rpi_current', nasStats['power']['rpi_current'])
+                updateField('rpi_bus_voltage', nasStats['power']['rpi_bus_voltage'])
+                updateField('drive1_current', nasStats['power']['drive1_current'])
+                updateField('drive1_bus_voltage', nasStats['power']['drive1_bus_voltage'])
+                updateField('drive2_current', nasStats['power']['drive2_current'])
+                updateField('drive2_bus_voltage', nasStats['power']['drive2_bus_voltage'])
             }
 
         }
 
 
-        function updateField(elementName, jsonFieldName) {
+        function updateField(elementName, value) {
             element = document.getElementById(elementName);
             if (element == null) {
                 console.warn("Unable to locate element by id "+elementName)
                 return
             }
-            rpiInfo = basaltData['nasStats']
-            if (rpiInfo != null) {
-                element.innerText = basaltData['nasStats'][jsonFieldName]
-            }
+            element.innerText = value
+            
         }
 
 
@@ -176,20 +181,19 @@
             </tr>
                 
             <tr>
-                <td>CPU:</td>
-                <td><span id="cpuPercent"></span>%</td>
+                <td>CPU %:</td><td><span id="cpuPercent"></span></td>
             </tr>
             <tr>
-                <td>RPi Time:</td>
-                <td><span id="rpiTime"></span></td>
+                <td>CPU Frequency:</td><td><span id="cpuFreq"></span></td>
             </tr>
             <tr>
-                <td>OS Uptime:</td>
-                <td><span id="osUptimeFmt"></span></td>
+                <td>CPU Temperature:</td><td><span id="cpuTemperature"></span></td>
             </tr>
             <tr>
-                <td>App Uptime:</td>
-                <td><span id="appUptimeFmt"></span></td>
+                <td>OS Uptime:</td><td><span id="osUptimeFmt"></span></td>
+            </tr>
+            <tr>
+                <td>App Uptime:</td><td><span id="appUptimeFmt"></span></td>
             </tr>
 
 
