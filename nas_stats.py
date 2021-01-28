@@ -76,6 +76,15 @@ class NasStats:
     def startup(self):
         logger.info('NasStats Startup...')
 
+        now = time.time()
+        stats = { 
+            'timestampEpoc': now,
+            'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+            'state': 'starting'
+        }
+        self.nasMon.pubsub.setDeviceBirthMsg( stats )
+
+
         i2c_bus = board.I2C()
         # The si7021 has a i2c address of 0x40
         # We try to init the sensor multiple times because sometimes we get the following error on init:
@@ -116,6 +125,15 @@ class NasStats:
     def shutdown(self):
         logger.info('Shutdown...')
         self.stopStatsThread()
+        #data = self.getStats()
+
+        now = time.time()
+        stats = { 
+            'timestampEpoc': now,
+            'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+            'state': 'shutdown'
+        }
+        self.nasMon.pubsub.publishCurrentState( stats )
 
     def startStatsThread(self):
 
@@ -238,9 +256,9 @@ class NasStats:
                 "cpuTemperature": cpuTemperature,
                 "memoryUsedPercent": memoryUsedPercent,
                 "bootTimestampEpoc": osStartTime,
-                "uptime": osUptime,
+                "uptime": round(osUptime,3),
                 "uptimeFmt": str(datetime.timedelta(seconds=round(osUptime))),
-                "monUptime": appUptime,
+                "monUptime": round(appUptime,3),
                 "monUptimeFmt": str(datetime.timedelta(seconds=round(appUptime))),
             },
 
@@ -249,7 +267,7 @@ class NasStats:
                 'humidity1': enclosure_humidity1,
                 'temperature2': round(self.celsius2fahrenheit(enclosure_tempCelsius2), 1),
                 'humidity2': enclosure_humidity2,
-                'pressure': enclosure_pressure
+                'pressure': round(enclosure_pressure, 2)
             },
 
             'power': {
@@ -264,6 +282,9 @@ class NasStats:
                 'drive2_psu_voltage':drive2_psu_voltage,
                 'drive2_current': drive2_current,
                 'drive2_bus_voltage': drive2_bus_voltage,
+
+                'watts': round((rpi_current * rpi_bus_voltage) + (drive1_current * drive1_bus_voltage) + (drive2_current * drive2_bus_voltage), 1),
+                
             },
 
             'filesystem': filesystemInfo
@@ -334,24 +355,27 @@ class NasStats:
             filesystem['spaceusedpercent'] = round( ((usage.used / usage.total) * 100), 3)
             
             filesystem_cache = self.filesystemDict_cache.get(label)
-            activity = False
+            activity_read = False
+            activity_write = False
             if filesystem_cache is not None:
                 readDiff = io.read_bytes - filesystem_cache['read_bytes']
                 writeDiff = io.write_bytes - filesystem_cache['write_bytes']
                 # TODO: This is an issue as it depends on the call
                 # e.g., if its consistant at every 30 seconds then it would be a reliable
                 # We cache this upon every call -- Need to think about it
-                filesystem_cache['read_bytes_diff'] = readDiff
-                filesystem_cache['write_bytes_diff'] = writeDiff
+                #filesystem_cache['read_bytes_diff'] = readDiff
+                #filesystem_cache['write_bytes_diff'] = writeDiff
 
                 # timeDiff = (now - filesystem_cache_timestamp)
                 # filesystem_cache['read_bytes_per_sec'] = readDiff / (now - timeDiff
                 # filesystem_cache['write_bytes_per_sec'] = writeDiff / (now - timeDiff
 
-                activity = readDiff > 0 or writeDiff > 0
+                activity_read = readDiff > 0 
+                activity_write = writeDiff > 0
         
-            filesystem['activity'] = activity
-            if activity:
+            filesystem['activity_read'] = activity_read
+            filesystem['activity_write'] = activity_write
+            if activity_read or activity_write:
                 # Since there has been activity lately the drive is already spun-up so we can get the drive temperature
                 deviceName = "/dev/{}".format(filesystem['pkname'])
                 smartCapable = self.deviceSupportsSmart.get(deviceName)

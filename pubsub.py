@@ -48,6 +48,7 @@ class Pubsub:
         self.typeName = mqttConfig['queue']['typeName']
         self.deviceName = mqttConfig['queue']['deviceName']
 
+        _deviceBirthMsg = None
 
         # Node name example: yukon/node/rpibasalt1/status
         _nodeName = os.uname().nodename
@@ -84,6 +85,12 @@ class Pubsub:
         self.client.loop_start()
 
     ######################################################################
+    # Allow other classes to set the device birth msg prior to connecting
+    ######################################################################
+    def setDeviceBirthMsg(self, msg):
+        self._deviceBirthMsg = msg
+
+    ######################################################################
     # Publish the BIRTH certificates
     ######################################################################
     def publishBirth(self):
@@ -102,9 +109,10 @@ class Pubsub:
     # Publish the DEVICE BIRTH certificate
     ######################################################################
     def publishDeviceBirth(self):
-        logger.info("Publishing Device Birth")
-        payload = "unknown"
-        self.client.publish(self.queueDeviceStatus, payload, 0, True)
+        if self._deviceBirthMsg is not None:
+            logger.info("Publishing Device Birth")
+            payload = json.dumps(self._deviceBirthMsg)
+            self.client.publish(self.queueDeviceStatus, payload, 0, True)
 
     ######################################################################
     # Publish the NODE offline
