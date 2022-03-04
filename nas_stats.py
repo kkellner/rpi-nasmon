@@ -24,6 +24,7 @@ sudo i2cdetect -y 1
 import logging
 import time
 import datetime
+import pytz
 import threading
 import sys
 import subprocess
@@ -79,7 +80,7 @@ class NasStats:
         now = time.time()
         stats = { 
             'timestampEpoc': now,
-            'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+            'timestamp': datetime.datetime.fromtimestamp(now,pytz.timezone("America/Denver")).strftime('%Y-%m-%d %H:%M:%S.%f%z'),
             'state': 'starting'
         }
         self.nasMon.pubsub.setDeviceBirthMsg( stats )
@@ -130,7 +131,7 @@ class NasStats:
         now = time.time()
         stats = { 
             'timestampEpoc': now,
-            'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+            'timestamp': datetime.datetime.fromtimestamp(now,pytz.timezone("America/Denver")).strftime('%Y-%m-%d %H:%M:%S.%f%z'),
             'state': 'shutdown'
         }
         self.nasMon.pubsub.publishCurrentState( stats )
@@ -247,7 +248,7 @@ class NasStats:
         logger.info("Time to get stats: %0.3fms",  collectStatsDuration)
         stats = { 
             'timestampEpoc': now,
-            'timestamp': datetime.datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+            'timestamp': datetime.datetime.fromtimestamp(now,pytz.timezone("America/Denver")).strftime('%Y-%m-%d %H:%M:%S.%f%z'),
             'collectStatsDuration': round(collectStatsDuration, 3),
 
             'os': {

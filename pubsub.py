@@ -48,7 +48,7 @@ class Pubsub:
         self.typeName = mqttConfig['queue']['typeName']
         self.deviceName = mqttConfig['queue']['deviceName']
 
-        _deviceBirthMsg = None
+        self._deviceBirthMsg = None
 
         # Node name example: yukon/node/rpibasalt1/status
         _nodeName = os.uname().nodename
