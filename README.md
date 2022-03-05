@@ -28,6 +28,7 @@ sudo pip3 install RPI.GPIO
 sudo pip3 install adafruit-blinka
 sudo pip3 install adafruit-circuitpython-si7021
 sudo pip3 install barbudor-circuitpython-ina3221
+sudo pip3 install pytz
 ```
 
 ## Enable i2c on Pi
